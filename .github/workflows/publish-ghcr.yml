@@ -29,5 +29,5 @@ jobs:
             org.opencontainers.image.licenses=MIT
           tags: |
             ghcr.io/onepush-dev/vocero-crm:latest
-            ghcr.io/onepush-dev/vocero-crm:2.7.0-r1
+            ghcr.io/onepush-dev/vocero-crm:2.7.0-r2
           platforms: linux/amd64
