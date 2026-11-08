@@ -7,7 +7,6 @@ PUBLIC_PORT="${PORT:-8080}"
 BOOT_PORT="${VOCERO_BOOTSTRAP_PORT:-3999}"
 : "${MEDIA_DIR:=/data/media}"
 export MEDIA_DIR
-MARKER=/data/.railway-owner-created
 cd /app
 
 mkdir -p "$MEDIA_DIR"
@@ -16,7 +15,9 @@ find /data ! -user vocero -exec chown -h vocero:vocero {} + 2>/dev/null || true
 echo "[railway] running database migrations"
 su-exec vocero node migrate.mjs
 
-if [ ! -f "$MARKER" ] && [ -n "${VOCERO_ADMIN_PASSWORD:-}" ]; then
+# Runs on every start: once the organization exists the sign-up is refused
+# (HTTP 403), so this is idempotent and also covers a reset database.
+if [ -n "${VOCERO_ADMIN_PASSWORD:-}" ]; then
   echo "[railway] creating owner account on 127.0.0.1:${BOOT_PORT}"
   PORT="$BOOT_PORT" HOSTNAME=127.0.0.1 su-exec vocero node server.js &
   pid=$!
@@ -40,7 +41,7 @@ if [ ! -f "$MARKER" ] && [ -n "${VOCERO_ADMIN_PASSWORD:-}" ]; then
       process.exit(r.ok || r.status === 403 ? 0 : 1);
     }).catch((e) => { console.error("[railway] owner sign-up failed:", e.message); process.exit(1); });
   '; then
-    touch "$MARKER"
+    :
   else
     echo "[railway] WARNING: owner account was not created; first visitor could register" >&2
   fi
